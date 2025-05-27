@@ -5,7 +5,7 @@ networks:
 
 services:
   new-api:
-    build: elliottwen/new-api:latest
+    image: elliottwen/new-api:latest
     networks:
       - share
     container_name: new-api

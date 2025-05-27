@@ -89,19 +89,26 @@ func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 				info.UpstreamModelName = strings.TrimSuffix(info.UpstreamModelName, "-nothinking")
 			}
 		}
-
-		if info.IsStream {
-			suffix = "streamGenerateContent?alt=sse"
+		if region == "global" {
+			// 当 region 为 "global" 时，使用不含区域前缀的主机名
+			return fmt.Sprintf (
+				"https://aiplatform.googleapis.com/v1/projects/% s/locations/% s/publishers/google/models/% s:% s",
+				adc.ProjectID,       // 项目 ID
+				region,              // 此时 region 的值是 "global"，用于路径 /locations/global/
+				info.UpstreamModelName, // 模型名称
+				suffix,              // 请求的动作 (generateContent 或 streamGenerateContent)
+			), nil
 		} else {
-			suffix = "generateContent"
+			// 对于其他非 "global" 区域，保持原有的 URL 构建方式 (带区域前缀的主机名)
+			return fmt.Sprintf (
+				"https://% s-aiplatform.googleapis.com/v1/projects/% s/locations/% s/publishers/google/models/% s:% s",
+				region,
+				adc.ProjectID,
+				region,
+				info.UpstreamModelName,
+				suffix,
+			), nil
 		}
-		return fmt.Sprintf(
-			"https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:%s",
-			adc.ProjectID,
-			region,
-			info.UpstreamModelName,
-			suffix,
-		), nil
 	} else if a.RequestMode == RequestModeClaude {
 		if info.IsStream {
 			suffix = "streamRawPredict?alt=sse"
